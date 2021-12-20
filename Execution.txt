@@ -1,28 +1,49 @@
 
-######################### sysbench with standalone/Cluster MySQL #############################
+######################### sysbench with standalone/Cluster MySQL ##############################
+# Test avec threads=4/8/16 
 sysbench --db-driver=mysql --mysql-user=sbtest_user --mysql_password=password --mysql-db=sbtest --mysql-host=127.0.0.1 --mysql-port=3306 --tables=1 --table-size=10000 /usr/share/sysbench/oltp_read_write.lua prepare
 sysbench --db-driver=mysql --mysql-user=sbtest_user --mysql_password=password --mysql-db=sbtest --mysql-host=127.0.0.1 --mysql-port=3306 --tables=1 --table-size=10000 --threads=8 --time=300 --events=0 --report-interval=1 --rate=40 /usr/share/sysbench/oltp_read_write.lua run
 
-
-############################## utilisation du Pattern Proxy   ################################
+############################## utilisation du Pattern Proxy     ################################
+#Dans proxy-gatekeeper
 cd ~
+./proxy.py [direct|random|balancer]
+#En local 
+./client_patterns.py
+
+############################## utilisation du Pattern gatekeeper ################################
+#Dans proxy-gatekeeper
+cd ~
+./gatekeeper.py
+#Dans trusted host
+cd ~
+./MyCli.py
+#En local 
+./client_patterns.py
+
+
 ./proxy.py random & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!`  --file /home/ubuntu/powerapi_proxy_1.txt duration 500
 
 
-
-############################## utilisation du Pattern Gatekeeper #############################
+############################## utilisation du Powerapi   #######################################
 #dans le trusted_host
 cd ~
 ./MyCli.py
 ./MyCli.py & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_trusted_Host_1.txt duration 500
+
 #dans le proxy-gatekeeper
 cd ~
+#Pattern proxy
 ./proxy.py direct & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_proxydirect_1.txt duration 500
 ./proxy.py random & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_proxyrandom_1.txt duration 500
 ./proxy.py balancer & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_proxybalancer_1.txt duration 500
 
+#Pattern GateKeeper
 ./gatekeeper.py   & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_gatekeeper_1.txt duration 500
 
 #dans les noeuds MySQL
 cd ~
 ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --apps mysql --file /home/ubuntu/powerapi_`hostname`_1.txt duration 500
+
+
+
