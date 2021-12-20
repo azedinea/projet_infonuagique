@@ -1,0 +1,118 @@
+#!/bin/bash
+
+#################### Installation Master/Slave ##################################
+sudo apt-get update
+sudo apt-get install mysql-client mysql-server
+apt-get update
+#securiser le server
+mysql_secure_installation
+#creation user de replication
+mysql -uroot -p
+CREATE USER 'rep_user'@'%' IDENTIFIED WITH mysql_native_password BY 'password'
+GRANT ALL PRIVILEGES ON *.* To 'rep_user' with GRANT OPTION;
+Flush Privileges;
+apt-get install snapd net-tools
+snap install mysql-shell
+apt-get update
+vi /etc/mysql/mysql.conf.d/mysqld.cnf
+bind-address = 0.0.0.0
+systemctl restart mysql
+mysqlsh -u rep_user -p
+dba.configure_local_instance('rep_user@172.31.93.29') ;
+apt-get install mysql-router
+
+#Ajout des hosts dans /etc/hosts, localhost au bon server
+172.31.86.69 ip-172-31-86-69 localhost 
+172.31.88.190 ip-172-31-88-190
+172.31.92.13  ip-172-31-92-13
+
+#################### Installation Master ##################################
+#creation du cluster dans un des noeds. (master=172.31.88.190)
+#declaration des autres noeds dans le master pour la synchronisation
+mysqlsh -u rep_user -p
+cluster=dba.create_cluster("ProjCluster") ;
+cluster.add_instance('rep_user@172.31.86.69')
+cluster.add_instance('rep_user@172.31.92.13')
+
+#installation de la bd sakila
+sudo wget http://downloads.mysql.com/docs/sakila-db.tar.gz
+sudo tar xzf sakila-db.tar.gz -C /tmp/
+sudo mysql -e "SOURCE /tmp/sakila-db/sakila-schema.sql;"
+sudo mysql -e "SOURCE /tmp/sakila-db/sakila-data.sql;"
+
+
+#Creation de la bd pour sysbench
+create database sbtest;
+create user sbtest_user identified by 'password';
+grant all on sbtest.* to 'sbtest_user'@'%';
+show grants for sbtest_user;
+
+#Creation de BD pour tester le proxy et le gatekeeper
+create database test1 ;
+use test1
+create table Persons (id int not null, nom varchar(30) not null, prenom varchar(30) not null, age int not null, constraint PK_Persons primary key(id));
+
+#installation et config powerapi
+wget https://github.com/powerapi-ng/powerapi-scala/releases/download/4.2.1/powerapi-cli-4.2.1.tgz
+tar xzf powerapi-cli-4.2.1.tgz
+
+
+# Outils debug cluster
+dba.get_cluster() ;
+cluster.status();
+cluster = dba.reboot_cluster_from_complete_outage();
+cluster.force_quorum_using_partition_of() 
+SET GLOBAL group_replication_bootstrap_group = ON;
+
+
+######################### sysbench with standalone MySQL #############################
+sysbench --db-driver=mysql --mysql-user=sbtest_user --mysql_password=password --mysql-db=sbtest --mysql-host=127.0.0.1 --mysql-port=3306 --tables=1 --table-size=10000 /usr/share/sysbench/oltp_read_write.lua prepare
+sysbench --db-driver=mysql --mysql-user=sbtest_user --mysql_password=password --mysql-db=sbtest --mysql-host=127.0.0.1 --mysql-port=3306 --tables=1 --table-size=10000 --threads=8 --time=300 --events=0 --report-interval=1 --rate=40 /usr/share/sysbench/oltp_read_write.lua run
+
+
+
+############# details du cluster ####################################################
+mysql-py []> dba.get_cluster().status()
+{
+    "clusterName": "ProjCluster", 
+    "defaultReplicaSet": {
+        "name": "default", 
+        "primary": "ip-172-31-88-190:3306", 
+        "ssl": "REQUIRED", 
+        "status": "OK", 
+        "statusText": "Cluster is ONLINE and can tolerate up to ONE failure.", 
+        "topology": {
+            "ip-172-31-86-69:3306": {
+                "address": "ip-172-31-86-69:3306", 
+                "mode": "R/O", 
+                "readReplicas": {}, 
+                "replicationLag": null, 
+                "role": "HA", 
+                "status": "ONLINE", 
+                "version": "8.0.27"
+            }, 
+            "ip-172-31-88-190:3306": {
+                "address": "ip-172-31-88-190:3306", 
+                "mode": "R/W", 
+                "readReplicas": {}, 
+                "replicationLag": null, 
+                "role": "HA", 
+                "status": "ONLINE", 
+                "version": "8.0.27"
+            }, 
+            "ip-172-31-92-13:3306": {
+                "address": "ip-172-31-92-13:3306", 
+                "mode": "R/O", 
+                "readReplicas": {}, 
+                "replicationLag": null, 
+                "role": "HA", 
+                "status": "ONLINE", 
+                "version": "8.0.27"
+
+            }
+        }, 
+        "topologyMode": "Single-Primary"
+    }, 
+    "groupInformationSourceMember": "ip-172-31-88-190:3306"
+}
+mysql-py []> 
