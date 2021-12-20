@@ -15,7 +15,7 @@ def main():
     sqlhost=master
     sqlport=3306
     sqluser='rep_user'
-    sqlpass='log8415e'
+    sqlpass='password'
     sqldb='test1'
     
     # connexion
