@@ -17,9 +17,9 @@ cd ~
 ./MyCli.py & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_trusted_Host_1.txt duration 500
 #dans le proxy-gatekeeper
 cd ~
-./proxy.py direct & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_proxy_1.txt duration 500
-./proxy.py random & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_proxy_1.txt duration 500
-./proxy.py balancer & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_proxy_1.txt duration 500
+./proxy.py direct & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_proxydirect_1.txt duration 500
+./proxy.py random & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_proxyrandom_1.txt duration 500
+./proxy.py balancer & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_proxybalancer_1.txt duration 500
 
 ./gatekeeper.py   & ./powerapi-cli-4.2.1/bin/powerapi modules procfs-cpu-simple monitor --frequency 1000 --pids `echo $!` --file /home/ubuntu/powerapi_gatekeeper_1.txt duration 500
 
