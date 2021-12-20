@@ -18,7 +18,7 @@ vi /etc/mysql/mysql.conf.d/mysqld.cnf
 bind-address = 0.0.0.0
 systemctl restart mysql
 mysqlsh -u rep_user -p
-dba.configure_local_instance('rep_user@172.31.93.29') ;
+dba.configure_local_instance('rep_user@172.31.88.190') ;
 apt-get install mysql-router
 
 #Ajout des hosts dans /etc/hosts, localhost au bon server
