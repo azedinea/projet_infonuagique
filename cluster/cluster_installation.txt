@@ -34,13 +34,13 @@ cluster=dba.create_cluster("ProjCluster") ;
 cluster.add_instance('rep_user@172.31.86.69')
 cluster.add_instance('rep_user@172.31.92.13')
 
-#installation de la bd sakila
+#####################installation de la bd sakila ####################
 sudo wget http://downloads.mysql.com/docs/sakila-db.tar.gz
 sudo tar xzf sakila-db.tar.gz -C /tmp/
 sudo mysql -e "SOURCE /tmp/sakila-db/sakila-schema.sql;"
 sudo mysql -e "SOURCE /tmp/sakila-db/sakila-data.sql;"
 
-
+#################### Preparation la bd sysbench ####################
 #Creation de la bd pour sysbench
 create database sbtest;
 create user sbtest_user identified by 'password';
